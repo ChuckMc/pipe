@@ -4,7 +4,7 @@
   "description": "Pipe terminal output to AI — ask questions about any command output",
   "type": "module",
   "bin": {
-    "pipe": "./dist/index.js"
+    "pipe": "dist/index.js"
   },
   "main": "./dist/index.js",
   "exports": {

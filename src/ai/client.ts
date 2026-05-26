@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { Writable } from "node:stream";
 
 const ANTHROPIC_API_KEY_ENV = "ANTHROPIC_API_KEY";
 
@@ -12,20 +13,21 @@ const DEFAULT_MODEL = "claude-sonnet-4-6-20250514";
 const DEFAULT_MAX_TOKENS = 4096;
 
 /**
- * Send stdin content + user query to Claude, stream the response to stdout.
- * Returns the full response text for programmatic use.
+ * Send stdin content + user query to Claude, stream the response to the
+ * given writable stream (typically process.stdout), and return the full text.
  */
 export async function analyzeWithAI(
   stdinContent: string,
   userQuery: string,
-  options: AIOptions = {}
+  options: AIOptions = {},
+  out: Writable = process.stdout
 ): Promise<string> {
   const apiKey = process.env[ANTHROPIC_API_KEY_ENV];
   if (!apiKey) {
-    console.error(
+    out.write(
       `Error: ${ANTHROPIC_API_KEY_ENV} is not set.\n` +
       "Set it with: export ANTHROPIC_API_KEY=your-key-here\n" +
-      "Get a key at: https://console.anthropic.com/"
+      "Get a key at: https://console.anthropic.com/\n"
     );
     process.exit(1);
   }
@@ -36,7 +38,8 @@ export async function analyzeWithAI(
     "You are a terminal assistant. The user has piped command output to you " +
     "and is asking a question about it. Analyze the output and answer concisely. " +
     "Focus on what matters — don't summarize the entire content unless asked. " +
-    "Be direct and practical.";
+    "Be direct and practical.\n\n" +
+    "Use markdown formatting when it helps readability — tables, code blocks, lists.";
 
   const messageContent = stdinContent
     ? [
@@ -45,7 +48,7 @@ export async function analyzeWithAI(
       ]
     : [{ type: "text" as const, text: userQuery }];
 
-  const stream = await anthropic.messages.stream(
+  const stream = anthropic.messages.stream(
     {
       model: options.model || DEFAULT_MODEL,
       max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
@@ -55,11 +58,16 @@ export async function analyzeWithAI(
     { signal: options.signal }
   );
 
-  const response = await stream.finalMessage();
-  const text = response.content
-    .filter((block): block is Anthropic.TextBlock => block.type === "text")
-    .map((block) => block.text)
-    .join("");
+  const chunks: string[] = [];
 
-  return text;
+  for await (const event of stream) {
+    if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+      out.write(event.delta.text);
+      chunks.push(event.delta.text);
+    }
+  }
+
+  out.write("\n");
+
+  return chunks.join("");
 }

@@ -39,7 +39,10 @@ export async function analyzeWithAI(
     "and is asking a question about it. Analyze the output and answer concisely. " +
     "Focus on what matters — don't summarize the entire content unless asked. " +
     "Be direct and practical.\n\n" +
-    "Use markdown formatting when it helps readability — tables, code blocks, lists.";
+    "Use markdown formatting when it helps readability — tables, code blocks, lists.\n\n" +
+    "IMPORTANT: Always respond in the same language the user wrote their question in. " +
+    "If they ask in Chinese, answer in Chinese. If they ask in English, answer in English. " +
+    "If they ask in Japanese, answer in Japanese. Match their language.";
 
   const messageContent = stdinContent
     ? [

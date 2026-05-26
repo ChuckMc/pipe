@@ -16,24 +16,28 @@ export interface PipeOptions {
 }
 
 const HELP_TEXT = `
-pipe — Pipe terminal output to AI
+pipe — Pipe terminal output to AI | 终端输出 → AI 分析
 
-USAGE:
+USAGE / 用法:
   <command> | pipe "your question"
-  pipe "your question"              (then paste input, Ctrl+D when done)
+  pipe "your question"              (then paste input / 粘贴内容后按 Ctrl+D)
   tail -f log | pipe --watch "analyze errors"
 
-OPTIONS:
+OPTIONS / 选项:
   --watch, -w       Continuously analyze stdin as new data arrives
+                    持续监听 stdin，实时分析新增内容
   --model, -m       Claude model to use (default: claude-sonnet-4-6-20250514)
+                    指定 Claude 模型
   --max-tokens      Max response tokens (default: 4096)
-  --help, -h        Show this help
+  --help, -h        Show this help / 显示帮助
 
-EXAMPLES:
+EXAMPLES / 示例:
   cat build.log | pipe "Why did the build fail?"
+  cat build.log | pipe "构建为什么失败了？"
   kubectl get pods | pipe "Any pods in CrashLoopBackOff?"
   dmesg | pipe "Summarize hardware errors"
   tail -f server.log | pipe --watch "Alert me on ERROR or WARNING"
+  tail -f server.log | pipe -w "报告 ERROR 和慢查询"
 `;
 
 export function parseArgs(args: string[]): PipeOptions {

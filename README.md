@@ -7,7 +7,7 @@
 ║  2. 头图使用 DreamField 官方公开活动图片地址                         ║
 ║  3. 请保留 DREAMFIELD_README_HEADER_START / END 标识                 ║
 ║  4. 分割线以下供创作者自由编写项目内容                               ║
-╚═════════════════════════════════════��════════════════════════════════╝
+╚══════════════════════════════════════════════════════════════════════╝
 -->
 
 <!-- DREAMFIELD_README_HEADER_START -->
@@ -20,126 +20,123 @@
 
 <!-- DREAMFIELD_README_HEADER_END -->
 
-# pipe
+<h1 align="center">pipe</h1>
 
-> Pipe terminal output to AI. Ask questions about any command output.
-> 终端输出 → AI 分析。用自然语言问问题。
+<p align="center">
+  <strong>终端输出 → AI 分析。一个管道命令，问任何问题。</strong>
+  <br>
+  Pipe any command output to Claude and ask questions right in your terminal.
+</p>
 
-\`\`\`bash
-cat build.log | pipe "Why did the build fail?"
+<p align="center">
+  <a href="https://github.com/ChuckMc/pipe/releases"><img src="https://img.shields.io/github/v/release/ChuckMc/pipe" alt="GitHub Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT"></a>
+</p>
+
+```bash
 cat build.log | pipe "构建为什么失败了？"
-tail -f server.log | pipe --watch "报告 ERROR 和慢查询"
-\`\`\`
-
-[![npm](https://img.shields.io/npm/v/pipe-cli)](https://www.npmjs.com/package/pipe-cli)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
+tail -f server.log | pipe -w "发现 ERROR 立刻报告"
+kubectl get pods -A | pipe "哪些 Pod 状态异常？"
+```
 
 ---
 
-## Demo / 演示
+## 为什么用 pipe？
 
-\`\`\`
-$ dmesg | pipe "检测到硬件错误了吗？"
+**遇到问题** — **打开浏览器** — **复制粘贴** — **等回复** — **切回终端**
 
-✓ 检测到 3 个硬件错误：
-  • GPU reset (NVDA) × 2 — 检查温度
-  • SATA link down on port 3 — 检查线缆
-  • USB overcurrent on port 6 — 检查物理接口
-\`\`\`
+还是
+
+```bash
+cat log | pipe "why？"
+```
+
+pipe 让你**全程不离开终端**，一行命令把任何输出丢给 AI，用自然语言问问题，实时流式回答。
 
 ---
 
-## Install / 安装
+## 快速开始
 
-\`\`\`bash
-# One line / 一行安装
+```bash
+# 1. 安装
 npm install -g pipe-cli
 
-# Set your API key / 设置 API 密钥
+# 2. 设置 API 密钥（加入到 ~/.zshrc 永久生效）
 export ANTHROPIC_API_KEY=sk-ant-...
-\`\`\`
 
-建议将 API 密钥加入 `~/.zshrc` 或 `~/.bashrc` 永久生效。
-
----
-
-## Usage / 使用
-
-### Debug / 调试
-
-\`\`\`bash
-# Ask in English
-cat build.log | pipe "What caused the error?"
-
-# 用中文提问
-cat build.log | pipe "构建为什么失败了？有什么修复建议？"
-
-# Analyze servers
-curl -s https://api.example.com/health | pipe "Is everything healthy?"
-\`\`\`
-
-### Real-time monitoring / 实时监控
-
-\`\`\`bash
-# English prompt
-tail -f server.log | pipe --watch "Detect errors and warnings"
-
-# 中文提示
-tail -f server.log | pipe -w "报告 ERROR 和慢查询"
-\`\`\`
-
-### Options / 选项
-
-| Flag | Description | 说明 |
-|------|-------------|------|
-| \`-w\`, \`--watch\` | Continuously analyze stdin | 持续监听并实时分析 |
-| \`-m\`, \`--model\` | Claude model override | 指定 Claude 模型 |
-| \`--max-tokens\` | Max response tokens | 最大回复 token 数 |
-| \`-h\`, \`--help\` | Show help | 显示帮助 |
+# 3. 开用
+cat build.log | pipe "为什么构建失败了？有什么修复建议？"
+```
 
 ---
 
-## Why pipe? / 为什么用 pipe？
+## 使用示例
 
-**Before / 之前：** Copy output → open browser → paste → type question → wait → switch back
-**With pipe / 现在：** \`cat log | pipe "why?"\` → answer in terminal. Done. 全程留在终端。
+### 调试构建失败
+
+```bash
+# 中文提问
+cat build.log | pipe "报错原因是什么？怎么修复？"
+
+# English
+cat build.log | pipe "What caused the error? How to fix?"
+```
+
+### 排查服务器异常
+
+```bash
+curl -s https://api.example.com/health | pipe "服务都正常吗？"
+dmesg | pipe "有硬件错误吗？"
+journalctl -u nginx --no-pager -p err | pipe "总结最近的错误"
+```
+
+### 日志实时监控
+
+```bash
+tail -f server.log  | pipe -w "只报告 ERROR 和 WARNING，忽略 INFO"
+tail -f access.log | pipe -w "发现 5xx 或慢请求时警报"
+tail -f app.log    | pipe -w "检测到 OOM 或内存泄漏迹象就告诉我"
+```
+
+### 代码审查
+
+```bash
+git diff main...HEAD | pipe "Review these changes, any bugs?"
+```
+
+### Kubernetes 运维
+
+```bash
+kubectl describe pod crash-pod | pipe "为什么这个 Pod 一直 CrashLoopBackOff？"
+kubectl get events --sort-by=.lastTimestamp | pipe "集群最近有什么异常？"
+```
+
+### 数据库
+
+```bash
+psql -c "EXPLAIN ANALYZE SELECT ..." | pipe "这个查询慢在哪？索引怎么优化？"
+```
 
 ---
 
-## How it works / 原理
+## 选项
 
-1. **pipe** reads stdin (or lets you paste content) / 读取 stdin（或交互粘贴）
-2. Sends the output + your question to Claude / 将输出 + 问题发给 Claude
-3. Streams the AI response to stdout / 将 AI 回复实时流式输出到终端
-
-No config file. No daemon. No YAML. 零配置，一个命令。
+| 参数 | 作用 |
+|------|------|
+| `-w`, `--watch` | 持续监听 stdin，新数据自动分析 |
+| `-m`, `--model` | 指定 Claude 模型 |
+| `--max-tokens` | 最大回复长度 |
+| `-h`, `--help`  | 显示帮助 |
 
 ---
 
-## Use cases / 使用场景
+## 工作原理
 
-### DevOps / SRE
-\`\`\`bash
-kubectl describe pod crash-pod | pipe "为什么这个 Pod 在崩溃？"
-journalctl -u nginx --no-pager | pipe "Summary recent errors"
-docker logs app-container --tail 200 | pipe "有内存问题吗？"
-\`\`\`
+```
+你的命令 → stdout → pipe → Claude API → 流式回答 → 你的终端
+```
 
-### Development / 开发
-\`\`\`bash
-git diff main...HEAD | pipe "Review these changes for bugs"
-cargo check 2>&1 | pipe "修复类型错误"
-pnpm test 2>&1 | pipe "哪些测试失败了？原因是什么？"
-\`\`\`
-
-### Data analysis / 数据分析
-\`\`\`bash
-psql -c "EXPLAIN ANALYZE SELECT * FROM orders WHERE ..." | pipe \
-  "这个查询优化了吗？建议加什么索引？"
-cat access.log | awk '{print $1}' | sort | uniq -c | sort -rn | head -20 | pipe \
-  "有可疑 IP 吗？"
-\`\`\`
+零配置、无守护进程、不需要 YAML。
 
 ---
 
